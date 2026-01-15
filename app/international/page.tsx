@@ -9,8 +9,13 @@ import {
   FaYoutube,
 } from "react-icons/fa";
 
-import Appointment from "@/components/AppointmentBook";
+import dynamic from "next/dynamic";
 import Footer from "@/components/Footer";
+
+// Dynamically import Appointment to prevent SSR issues during build
+const Appointment = dynamic(() => import("@/components/AppointmentBook"), {
+  ssr: false,
+});
 
 function Page() {
   const icons = [

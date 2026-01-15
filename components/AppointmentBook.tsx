@@ -1,7 +1,7 @@
 "use client";
 
-import { redirect } from "next/navigation";
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
 import AppointmentForm from "./AppointmentForm";
 
 type WorkingHour = {
@@ -16,6 +16,8 @@ interface AppointmentFormProps {
 }
 
 const Appointment: React.FC<AppointmentFormProps> = ({ params }) => {
+  const router = useRouter();
+  
   const workingHours: WorkingHour[] = [
     { day: "Monday", hours: ["10:00 AM to 5:00 PM", "7:00 PM to 10:00 PM"] },
     { day: "Tuesday", hours: ["10:00 AM to 5:00 PM", "7:00 PM to 10:00 PM"] },
@@ -37,8 +39,17 @@ const Appointment: React.FC<AppointmentFormProps> = ({ params }) => {
 
   const show = true;
 
-  if (show) {
-    return (
+  useEffect(() => {
+    if (!show) {
+      router.push("/dashboard");
+    }
+  }, [show, router]);
+
+  if (!show) {
+    return null;
+  }
+
+  return (
       <section className="container mx-auto">
         <div className="max-w-2xl justify-center mx-auto text-center">
           <div className="text-center mb-5 text-black text-3xl md:text-4xl uppercase font-bold">
@@ -92,9 +103,7 @@ const Appointment: React.FC<AppointmentFormProps> = ({ params }) => {
           </div>
         </div>
       </section>
-    );
-  }
-  return redirect("/dashboard");
+  );
 };
 
 export default Appointment;

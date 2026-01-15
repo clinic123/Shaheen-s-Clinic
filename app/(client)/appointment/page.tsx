@@ -1,4 +1,11 @@
-import Appointment from "@/components/AppointmentBook";
+"use client";
+
+import dynamic from "next/dynamic";
+
+// Dynamically import Appointment to prevent SSR issues during build
+const Appointment = dynamic(() => import("@/components/AppointmentBook"), {
+  ssr: false,
+});
 
 const AppointmentPage = () => {
   return (

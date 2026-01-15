@@ -1,6 +1,22 @@
 "use client"; // ensure client-side
 
-import Appointment from "@/components/AppointmentBook";
+import dynamic from "next/dynamic";
+
+// Dynamically import Appointment to prevent SSR issues during build
+const Appointment = dynamic(
+  () => import("@/components/AppointmentBook"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    ),
+  }
+);
 import StudentCard from "@/components/StudentCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
