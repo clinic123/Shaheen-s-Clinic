@@ -1,83 +1,23 @@
-import type { Session } from "@/lib/auth";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-const publicRoutes = ["/auth", "/forgot-password", "/reset-password", "/login"];
-const protectedRoutes = [
-  "/dashboard",
-  "/checkout",
-  "/profile",
-  "/admin",
-  "/doctor",
-];
+export async function middleware(request: NextRequest) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-export default async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-
-  // Check if the route is public
-  const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
-
-  // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
-
-  // Get the session - using auth.api.getSession as recommended by Better Auth docs
-  // https://www.better-auth.com/docs/integrations/next
-  let session: Session | null = null;
-  try {
-    const sessionResult = await auth.api.getSession({
-      headers: await headers(),
-    });
-    
-    // Only consider it a valid session if it has a user with an id
-    if (sessionResult?.user?.id) {
-      session = sessionResult;
-    }
-  } catch (error) {
-    // If session fetch fails, treat as no session
-    console.error("Middleware session check error:", error);
-    session = null;
-  }
-
-  // If user is not authenticated and trying to access protected route
-  if (!session?.user && isProtectedRoute) {
-    return NextResponse.redirect(
-      new URL(`/login?redirect=${encodeURIComponent(pathname)}`, request.url)
-    );
-  }
-
-  // If user is authenticated and trying to access auth page
-  if (session?.user && isPublicRoute) {
-    // Redirect to dashboard or role-based default
-    const roleRedirects: Record<string, string> = {
-      admin: "/admin/",
-      doctor: "/doctor/",
-      user: "/dashboard",
-    };
-
-    const role = session.user.role;
-    const redirectUrl = (role && roleRedirects[role]) || "/dashboard";
-    return NextResponse.redirect(new URL(redirectUrl, request.url));
+  // THIS IS NOT SECURE!
+  // This is the recommended approach to optimistically redirect users
+  // We recommend handling auth checks in each page/route
+  if (!session) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  runtime: "nodejs",
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  runtime: "nodejs", // Required for auth.api calls
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"], // Specify the routes the middleware applies to
 };

@@ -141,7 +141,6 @@ export const auth = betterAuth({
         doctor,
       },
     }),
-
     nextCookies(),
   ],
 });
