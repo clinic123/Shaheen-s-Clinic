@@ -1,4 +1,6 @@
 import type { Session } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -24,13 +26,12 @@ export default async function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
-  // Get the session - use auth API directly instead of betterFetch
+  // Get the session - using auth.api.getSession as recommended by Better Auth docs
+  // https://www.better-auth.com/docs/integrations/next
   let session: Session | null = null;
   try {
-    // Import auth dynamically to avoid issues
-    const { auth } = await import("@/lib/auth");
     const sessionResult = await auth.api.getSession({
-      headers: request.headers,
+      headers: await headers(),
     });
     
     // Only consider it a valid session if it has a user with an id
