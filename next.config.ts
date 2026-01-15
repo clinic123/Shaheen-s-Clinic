@@ -6,7 +6,12 @@ const nextConfig: NextConfig = {
     authInterrupts: true,
   },
   // Exclude server-only packages from client bundling
-  serverExternalPackages: ["bcryptjs"],
+  serverExternalPackages: [
+    "bcryptjs",
+    "better-auth",
+    "@prisma/client",
+    "prisma",
+  ],
   trailingSlash: true,
   typescript: {
     ignoreBuildErrors: true,
@@ -27,17 +32,29 @@ const nextConfig: NextConfig = {
       fs: false,
     };
     
-    // Exclude bcryptjs from client-side bundling
+    // Exclude server-only packages from client-side bundling
     if (!isServer) {
       config.externals = config.externals || [];
       if (Array.isArray(config.externals)) {
-        config.externals.push("bcryptjs");
+        config.externals.push(
+          "bcryptjs",
+          "better-auth",
+          "@prisma/client",
+          "prisma"
+        );
       } else if (typeof config.externals === "function") {
         const originalExternals = config.externals;
         config.externals = [
           ...(Array.isArray(originalExternals) ? originalExternals : []),
           ({ request }: { request: string }) => {
-            if (request && request.includes("bcryptjs")) {
+            if (
+              request &&
+              (request.includes("bcryptjs") ||
+                request.includes("better-auth") ||
+                request.includes("@prisma/client") ||
+                request.includes("prisma") ||
+                request.startsWith("node:"))
+            ) {
               return true;
             }
           },

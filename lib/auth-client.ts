@@ -1,8 +1,7 @@
-import { adminClient, inferAdditionalFields } from "better-auth/client/plugins";
+import { adminClient } from "better-auth/client/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { createAuthClient } from "better-auth/react";
 import { toast } from "sonner";
-import { auth } from "./auth";
 
 // Get base URL for auth client
 const getBaseURL = () => {
@@ -27,7 +26,12 @@ const getBaseURL = () => {
 
 export const authClient = createAuthClient({
   baseURL: getBaseURL(),
-  plugins: [inferAdditionalFields<typeof auth>(), adminClient(), nextCookies()],
+  plugins: [
+    // Note: inferAdditionalFields removed to prevent server code bundling in client
+    // Types are already defined in types/better-auth.d.ts
+    adminClient(),
+    nextCookies(),
+  ],
   fetchOptions: {
     onError(e) {
       if (e.error.status === 429) {
