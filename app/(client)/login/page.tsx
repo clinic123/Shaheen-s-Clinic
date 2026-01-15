@@ -1,7 +1,11 @@
 "use client";
 
 import { signInSocial } from "@/lib/actions/auth-actions";
-import { signIn as clientSignIn, signUp as clientSignUp, useSession } from "@/lib/auth-client";
+import {
+  signIn as clientSignIn,
+  signUp as clientSignUp,
+  useSession,
+} from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -26,13 +30,8 @@ export default function AuthClientPage() {
     // 2. Session exists
     // 3. Session has a valid user object
     // 4. User has an id (required field)
-    if (
-      !sessionLoading &&
-      session &&
-      session.user &&
-      session.user.id
-    ) {
-      const redirectUrl = redirect || "/dashboard";
+    if (!sessionLoading && session && session.user && session.user.id) {
+      const redirectUrl = redirect || "/";
       router.push(redirectUrl);
     }
   }, [session, sessionLoading, redirect, router]);
@@ -65,14 +64,14 @@ export default function AuthClientPage() {
         result = await clientSignIn.email({
           email,
           password,
-          callbackURL: redirect || "/dashboard",
+          callbackURL: redirect || "/",
         });
       } else {
         result = await clientSignUp.email({
           email,
           password,
           name,
-          callbackURL: redirect || "/dashboard",
+          callbackURL: redirect || "/",
         });
       }
 
@@ -92,9 +91,9 @@ export default function AuthClientPage() {
 
       // Wait a bit for cookies to be set, then redirect
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       // Use window.location for full page reload to ensure cookies are read
-      const redirectUrl = redirect || "/dashboard";
+      const redirectUrl = redirect || "/";
       window.location.href = redirectUrl;
     } catch (err) {
       console.error("Login error:", err);
