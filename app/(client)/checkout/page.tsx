@@ -1,10 +1,7 @@
-// app/checkout/page.tsx
+// app/(client)/checkout/page.tsx
 "use client";
 
-// Prevent static generation
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 
 import LoadingUi from "@/components/loading";
@@ -14,7 +11,7 @@ import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -479,3 +476,10 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+// Export with dynamic to prevent pre-rendering
+const CheckoutPage = dynamic(() => Promise.resolve(CheckoutPageContent), {
+  ssr: false,
+});
+
+export default CheckoutPage;

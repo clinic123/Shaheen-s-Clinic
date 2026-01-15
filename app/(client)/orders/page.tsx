@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import {
   Dialog,
   DialogContent,
@@ -45,7 +46,7 @@ const fetchOrders = async (): Promise<{ success: boolean; data: Order[] }> => {
   return response.json();
 };
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -399,3 +400,10 @@ export default function OrdersPage() {
     </div>
   );
 }
+
+// Export with dynamic to prevent pre-rendering
+const OrdersPage = dynamic(() => Promise.resolve(OrdersPageContent), {
+  ssr: false,
+});
+
+export default OrdersPage;

@@ -1,9 +1,6 @@
 "use client";
 
-// Prevent static generation
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
+import dynamic from "next/dynamic";
 import { useState } from "react";
 
 import LoadingUi from "@/components/loading";
@@ -34,7 +31,7 @@ interface Cart {
   items: CartItem[];
 }
 
-export default function CartPage() {
+function CartPageContent() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
@@ -405,3 +402,10 @@ export default function CartPage() {
     </div>
   );
 }
+
+// Export with dynamic to prevent pre-rendering
+const CartPage = dynamic(() => Promise.resolve(CartPageContent), {
+  ssr: false,
+});
+
+export default CartPage;

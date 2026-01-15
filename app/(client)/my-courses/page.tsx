@@ -1,6 +1,7 @@
 // app/my-courses/page.tsx
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -47,7 +48,7 @@ const fetchMyCourseOrders = async (): Promise<{
   return response.json();
 };
 
-export default function MyCoursesPage() {
+function MyCoursesPageContent() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const [selectedCourse, setSelectedCourse] = useState<CourseOrder | null>(
@@ -380,3 +381,10 @@ export default function MyCoursesPage() {
     </div>
   );
 }
+
+// Export with dynamic to prevent pre-rendering
+const MyCoursesPage = dynamic(() => Promise.resolve(MyCoursesPageContent), {
+  ssr: false,
+});
+
+export default MyCoursesPage;

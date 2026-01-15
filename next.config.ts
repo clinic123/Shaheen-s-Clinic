@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
       tls: false,
       fs: false,
     };
-    
+
     // Exclude server-only packages from client-side bundling
     if (!isServer) {
       config.externals = config.externals || [];
@@ -61,7 +61,7 @@ const nextConfig: NextConfig = {
         ];
       }
     }
-    
+
     return config;
   },
 };
