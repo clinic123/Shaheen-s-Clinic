@@ -77,18 +77,27 @@ export default function AuthClientPage() {
       }
 
       if (result.error) {
+        console.error("Auth error:", result.error);
         setError(result.error.message || "Authentication failed");
         setIsLoading(false);
         return;
       }
 
+      // Check if we got a successful response
+      if (!result.data) {
+        setError("Authentication failed - no data received");
+        setIsLoading(false);
+        return;
+      }
+
       // Wait a bit for cookies to be set, then redirect
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       
       // Use window.location for full page reload to ensure cookies are read
       const redirectUrl = redirect || "/dashboard";
       window.location.href = redirectUrl;
     } catch (err) {
+      console.error("Login error:", err);
       setError(
         `Authentication error: ${
           err instanceof Error ? err.message : "Unknown error"

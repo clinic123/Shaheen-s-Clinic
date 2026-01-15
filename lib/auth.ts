@@ -8,12 +8,28 @@ import prisma from "./prisma";
 
 // Get base URL for auth
 const getAuthBaseURL = () => {
-  return (
-    process.env.BETTER_AUTH_URL ||
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
-    "http://localhost:3000"
-  );
+  // In production, prioritize BETTER_AUTH_URL
+  if (process.env.BETTER_AUTH_URL) {
+    return process.env.BETTER_AUTH_URL;
+  }
+
+  // Fallback to NEXT_PUBLIC_BASE_URL
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+
+  // Fallback to NEXT_PUBLIC_BETTER_AUTH_URL
+  if (process.env.NEXT_PUBLIC_BETTER_AUTH_URL) {
+    return process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
+  }
+
+  // In production on Vercel, try to use VERCEL_URL
+  if (process.env.VERCEL_URL && process.env.NODE_ENV === "production") {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  // Default to localhost for development
+  return "http://localhost:3000";
 };
 
 export const auth = betterAuth({
@@ -95,7 +111,11 @@ export const auth = betterAuth({
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       path: "/",
+      // Don't set domain explicitly - let browser handle it
+      // This ensures cookies work with custom domains on Vercel
     },
+    // Trust proxy for Vercel deployment
+    trustProxy: true,
   },
   user: {
     additionalFields: {
