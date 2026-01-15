@@ -1,9 +1,10 @@
 "use client";
 
-import { signIn, signInSocial, signUp } from "@/lib/actions/auth-actions";
+import { signInSocial } from "@/lib/actions/auth-actions";
+import { signIn as clientSignIn, signUp as clientSignUp, useSession } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function AuthClientPage() {
   const [isSignIn, setIsSignIn] = useState(true);
@@ -14,10 +15,17 @@ export default function AuthClientPage() {
   const [error, setError] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, isPending: sessionLoading } = useSession();
 
   const redirect = searchParams.get("redirect") as string;
 
-  console.log(redirect);
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!sessionLoading && session?.user) {
+      const redirectUrl = redirect || "/dashboard";
+      router.push(redirectUrl);
+    }
+  }, [session, sessionLoading, redirect, router]);
 
   const handleSocialAuth = async (provider: "google" | "github") => {
     setIsLoading(true);
@@ -42,35 +50,40 @@ export default function AuthClientPage() {
     setError("");
 
     try {
+      let result;
       if (isSignIn) {
-        const result = await signIn(email, password, redirect);
-        if (!result.user) {
-          setError("Invalid email or password");
-          setIsLoading(false);
-          return;
-        }
+        result = await clientSignIn.email({
+          email,
+          password,
+          callbackURL: redirect || "/dashboard",
+        });
       } else {
-        const result = await signUp(email, password, name, redirect);
-        if (!result.user) {
-          setError("Failed to create account");
-          setIsLoading(false);
-          return;
-        }
+        result = await clientSignUp.email({
+          email,
+          password,
+          name,
+          callbackURL: redirect || "/dashboard",
+        });
       }
+
+      if (result.error) {
+        setError(result.error.message || "Authentication failed");
+        setIsLoading(false);
+        return;
+      }
+
+      // Wait a bit for cookies to be set, then redirect
+      await new Promise((resolve) => setTimeout(resolve, 500));
       
-      // Redirect to specified URL or default dashboard
-      if (redirect) {
-        router.push(redirect);
-      } else {
-        router.push("/dashboard");
-      }
+      // Use window.location for full page reload to ensure cookies are read
+      const redirectUrl = redirect || "/dashboard";
+      window.location.href = redirectUrl;
     } catch (err) {
       setError(
         `Authentication error: ${
           err instanceof Error ? err.message : "Unknown error"
         }`
       );
-    } finally {
       setIsLoading(false);
     }
   };

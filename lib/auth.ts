@@ -6,13 +6,24 @@ import { createTransporter } from "./email";
 import { ac, admin, doctor, user } from "./permissions";
 import prisma from "./prisma";
 
+// Get base URL for auth
+const getAuthBaseURL = () => {
+  return (
+    process.env.BETTER_AUTH_URL ||
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
+    "http://localhost:3000"
+  );
+};
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "mongodb" }),
+  baseURL: getAuthBaseURL(),
   emailAndPassword: {
     enabled: true,
     async sendResetPassword({ user, token }) {
       const transporter = createTransporter();
-      const resetUrl = `${process.env.BETTER_AUTH_URL}/reset-password?token=${token}`;
+      const resetUrl = `${getAuthBaseURL()}/reset-password?token=${token}`;
 
       const html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -74,15 +85,16 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      redirectURL: `${process.env.BETTER_AUTH_URL}/api/auth/callback/google`,
+      redirectURL: `${getAuthBaseURL()}/api/auth/callback/google`,
     },
   },
   hooks: {},
   advanced: {
     defaultCookieAttributes: {
-      sameSite: "none",
-      secure: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
       httpOnly: true,
+      path: "/",
     },
   },
   user: {
