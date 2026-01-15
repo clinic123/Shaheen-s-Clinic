@@ -1,5 +1,4 @@
 import type { Session } from "@/lib/auth";
-import { betterFetch } from "@better-fetch/fetch";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -25,26 +24,34 @@ export default async function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
-  // Get the session
-  const { data: session } = await betterFetch<Session>(
-    "/api/auth/get-session",
-    {
-      baseURL: request.nextUrl.origin,
-      headers: {
-        cookie: request.headers.get("cookie") || "",
-      },
+  // Get the session - use auth API directly instead of betterFetch
+  let session: Session | null = null;
+  try {
+    // Import auth dynamically to avoid issues
+    const { auth } = await import("@/lib/auth");
+    const sessionResult = await auth.api.getSession({
+      headers: request.headers,
+    });
+    
+    // Only consider it a valid session if it has a user with an id
+    if (sessionResult?.user?.id) {
+      session = sessionResult;
     }
-  );
+  } catch (error) {
+    // If session fetch fails, treat as no session
+    console.error("Middleware session check error:", error);
+    session = null;
+  }
 
   // If user is not authenticated and trying to access protected route
-  if (!session && isProtectedRoute) {
+  if (!session?.user && isProtectedRoute) {
     return NextResponse.redirect(
       new URL(`/login?redirect=${encodeURIComponent(pathname)}`, request.url)
     );
   }
 
   // If user is authenticated and trying to access auth page
-  if (session && isPublicRoute) {
+  if (session?.user && isPublicRoute) {
     // Redirect to dashboard or role-based default
     const roleRedirects: Record<string, string> = {
       admin: "/admin/",
@@ -52,7 +59,7 @@ export default async function middleware(request: NextRequest) {
       user: "/dashboard",
     };
 
-    const role = session?.user?.role;
+    const role = session.user.role;
     const redirectUrl = (role && roleRedirects[role]) || "/dashboard";
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }

@@ -19,9 +19,19 @@ export default function AuthClientPage() {
 
   const redirect = searchParams.get("redirect") as string;
 
-  // Redirect if already logged in
+  // Redirect if already logged in - only if we have a valid session with a user
   useEffect(() => {
-    if (!sessionLoading && session?.user) {
+    // Only redirect if:
+    // 1. Session is not loading
+    // 2. Session exists
+    // 3. Session has a valid user object
+    // 4. User has an id (required field)
+    if (
+      !sessionLoading &&
+      session &&
+      session.user &&
+      session.user.id
+    ) {
       const redirectUrl = redirect || "/dashboard";
       router.push(redirectUrl);
     }
