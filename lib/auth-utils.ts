@@ -17,9 +17,9 @@ export function getRoleRedirectPath(role?: string): string {
   const rolePathMap: Record<string, string> = {
     admin: "/admin",
     doctor: "/doctor",
-    user: "/dashboard",
+    user: "/",
   };
-  return rolePathMap[role || "user"] || "/dashboard";
+  return rolePathMap[role || "user"] || "/";
 }
 
 export function hasPermission(
