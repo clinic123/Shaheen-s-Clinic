@@ -1,7 +1,7 @@
 "use client";
 
-import { signInSocial } from "@/lib/actions/auth-actions";
 import {
+  authClient,
   signIn as clientSignIn,
   signUp as clientSignUp,
   useSession,
@@ -41,14 +41,31 @@ export default function AuthClientPage() {
     setError("");
 
     try {
-      await signInSocial(provider, redirect);
+      // Use client-side OAuth method
+      const callbackURL = redirect || "/";
+      const result = await authClient.signIn.social({
+        provider,
+        callbackURL,
+      });
+
+      if (result.error) {
+        setError(
+          result.error.message || `Failed to authenticate with ${provider}`
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      // If we got a URL, redirect to it (OAuth provider)
+      if (result.data?.url) {
+        window.location.href = result.data.url;
+      }
     } catch (err) {
       setError(
         `Error authenticating with ${provider}: ${
           err instanceof Error ? err.message : "Unknown error"
         }`
       );
-    } finally {
       setIsLoading(false);
     }
   };

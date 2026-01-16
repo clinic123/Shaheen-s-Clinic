@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin } from "better-auth/plugins";
 import { createTransporter } from "./email";
 import { ac, admin, doctor, user } from "./permissions";
@@ -76,14 +77,6 @@ export const auth = betterAuth({
   },
 
   hooks: {},
-  callbacks: {
-    async signIn({}) {
-      return true;
-    },
-    async redirect() {
-      return "/";
-    },
-  },
 
   advanced: {
     trustHost: true, // ✅ REQUIRED
@@ -116,6 +109,7 @@ export const auth = betterAuth({
       adminRoles: ["admin", "user", "doctor"],
       roles: { admin, user, doctor },
     }),
+    nextCookies(), // Must be last plugin for server actions cookie support
   ],
 });
 
