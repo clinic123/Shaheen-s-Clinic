@@ -1,6 +1,5 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin } from "better-auth/plugins";
 import { createTransporter } from "./email";
 import { ac, admin, doctor, user } from "./permissions";
@@ -102,12 +101,7 @@ export const auth = betterAuth({
       }
     },
   },
-  session: {
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60, // Cache duration in seconds
-    },
-  },
+  session: {},
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -146,7 +140,6 @@ export const auth = betterAuth({
       adminRoles: ["admin", "user", "doctor"],
       roles: { admin, user, doctor },
     }),
-    nextCookies(),
   ],
 });
 
