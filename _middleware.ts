@@ -18,16 +18,11 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // Middleware DISABLED for testing - will re-enable after OAuth fix
   // Middleware runs on Edge runtime by default
   // No Node.js dependencies = no deadlocks with better-auth
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes - including /api/auth/*)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    // Disabled - match nothing to bypass middleware
+    // "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };

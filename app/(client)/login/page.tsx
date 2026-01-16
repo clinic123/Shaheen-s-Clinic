@@ -59,7 +59,13 @@ export default function AuthClientPage() {
       // If we got a URL, redirect to it (OAuth provider)
       if (result.data?.url) {
         window.location.href = result.data.url;
+        // Don't set isLoading to false here - we're redirecting
+        return;
       }
+
+      // If no URL was returned, something went wrong
+      setError(`Failed to get OAuth URL for ${provider}`);
+      setIsLoading(false);
     } catch (err) {
       setError(
         `Error authenticating with ${provider}: ${
