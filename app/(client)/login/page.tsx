@@ -43,12 +43,22 @@ export default function AuthClientPage() {
     try {
       // Use client-side OAuth method
       const callbackURL = redirect || "/";
+      console.log(
+        "Starting OAuth with provider:",
+        provider,
+        "callbackURL:",
+        callbackURL
+      );
+
       const result = await authClient.signIn.social({
         provider,
         callbackURL,
       });
 
+      console.log("OAuth result:", result);
+
       if (result.error) {
+        console.error("OAuth error:", result.error);
         setError(
           result.error.message || `Failed to authenticate with ${provider}`
         );
@@ -58,15 +68,18 @@ export default function AuthClientPage() {
 
       // If we got a URL, redirect to it (OAuth provider)
       if (result.data?.url) {
+        console.log("Redirecting to OAuth URL:", result.data.url);
         window.location.href = result.data.url;
         // Don't set isLoading to false here - we're redirecting
         return;
       }
 
       // If no URL was returned, something went wrong
-      setError(`Failed to get OAuth URL for ${provider}`);
+      console.error("No OAuth URL returned. Result:", result);
+      setError(`Failed to get OAuth URL for ${provider}. Please try again.`);
       setIsLoading(false);
     } catch (err) {
+      console.error("OAuth exception:", err);
       setError(
         `Error authenticating with ${provider}: ${
           err instanceof Error ? err.message : "Unknown error"
