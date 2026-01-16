@@ -28,7 +28,10 @@ const getAuthBaseURL = () => {
   // For production with custom domain, use the custom domain
   if (process.env.NODE_ENV === "production") {
     // Check if we have a custom domain configured
-    if (process.env.VERCEL_URL && !process.env.VERCEL_URL.includes("vercel.app")) {
+    if (
+      process.env.VERCEL_URL &&
+      !process.env.VERCEL_URL.includes("vercel.app")
+    ) {
       return `https://${process.env.VERCEL_URL}`;
     }
     // For custom domains, Vercel sets the Host header correctly
@@ -41,7 +44,8 @@ const getAuthBaseURL = () => {
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "mongodb" }),
-  baseURL: getAuthBaseURL(),
+  baseURL: process.env.BETTER_AUTH_URL!, // FIXED
+
   emailAndPassword: {
     enabled: true,
     async sendResetPassword({ user, token }) {
@@ -108,21 +112,19 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      redirectURL: `${getAuthBaseURL()}/api/auth/callback/google`,
     },
   },
   hooks: {},
   advanced: {
+    trustHost: true, // ✅ REQUIRED
+    trustProxy: true,
+
     defaultCookieAttributes: {
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax", // ✅ FIX
+      secure: true,
       httpOnly: true,
       path: "/",
-      // Don't set domain explicitly - let browser handle it
-      // This ensures cookies work with custom domains on Vercel
     },
-    // Trust proxy for Vercel deployment
-    trustProxy: true,
   },
   user: {
     additionalFields: {
@@ -140,13 +142,9 @@ export const auth = betterAuth({
   plugins: [
     adminPlugin({
       adminUserIds: ["BmiEQBumD31Kv4TWFipaoqMnmMGmRFsV"],
-      ac: ac,
+      ac,
       adminRoles: ["admin", "user", "doctor"],
-      roles: {
-        admin,
-        user,
-        doctor,
-      },
+      roles: { admin, user, doctor },
     }),
     nextCookies(),
   ],

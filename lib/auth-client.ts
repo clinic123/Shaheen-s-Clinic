@@ -25,7 +25,8 @@ const getBaseURL = () => {
 };
 
 export const authClient = createAuthClient({
-  baseURL: getBaseURL(),
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL!,
+
   plugins: [
     // Note: inferAdditionalFields removed to prevent server code bundling in client
     // Types are already defined in types/better-auth.d.ts
