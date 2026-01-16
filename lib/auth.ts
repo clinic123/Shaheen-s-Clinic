@@ -23,9 +23,16 @@ const getAuthBaseURL = () => {
     return process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
   }
 
-  // In production on Vercel, try to use VERCEL_URL
-  if (process.env.VERCEL_URL && process.env.NODE_ENV === "production") {
-    return `https://${process.env.VERCEL_URL}`;
+  // In production on Vercel, check for custom domain first
+  // Vercel provides VERCEL_URL for preview deployments
+  // For production with custom domain, use the custom domain
+  if (process.env.NODE_ENV === "production") {
+    // Check if we have a custom domain configured
+    if (process.env.VERCEL_URL && !process.env.VERCEL_URL.includes("vercel.app")) {
+      return `https://${process.env.VERCEL_URL}`;
+    }
+    // For custom domains, Vercel sets the Host header correctly
+    // We'll rely on the request headers in the handler
   }
 
   // Default to localhost for development
