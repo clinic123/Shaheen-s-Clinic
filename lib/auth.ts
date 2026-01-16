@@ -5,42 +5,6 @@ import { createTransporter } from "./email";
 import { ac, admin, doctor, user } from "./permissions";
 import prisma from "./prisma";
 
-// Get base URL for auth
-const getAuthBaseURL = () => {
-  // In production, prioritize BETTER_AUTH_URL
-  if (process.env.BETTER_AUTH_URL) {
-    return process.env.BETTER_AUTH_URL;
-  }
-
-  // Fallback to NEXT_PUBLIC_BASE_URL
-  if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL;
-  }
-
-  // Fallback to NEXT_PUBLIC_BETTER_AUTH_URL
-  if (process.env.NEXT_PUBLIC_BETTER_AUTH_URL) {
-    return process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
-  }
-
-  // In production on Vercel, check for custom domain first
-  // Vercel provides VERCEL_URL for preview deployments
-  // For production with custom domain, use the custom domain
-  if (process.env.NODE_ENV === "production") {
-    // Check if we have a custom domain configured
-    if (
-      process.env.VERCEL_URL &&
-      !process.env.VERCEL_URL.includes("vercel.app")
-    ) {
-      return `https://${process.env.VERCEL_URL}`;
-    }
-    // For custom domains, Vercel sets the Host header correctly
-    // We'll rely on the request headers in the handler
-  }
-
-  // Default to localhost for development
-  return "http://localhost:3000";
-};
-
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "mongodb" }),
   baseURL: process.env.BETTER_AUTH_URL!, // FIXED
@@ -49,7 +13,9 @@ export const auth = betterAuth({
     enabled: true,
     async sendResetPassword({ user, token }) {
       const transporter = createTransporter();
-      const resetUrl = `${getAuthBaseURL()}/reset-password?token=${token}`;
+      const resetUrl = `${
+        process.env.BETTER_AUTH_URL as string
+      }/reset-password?token=${token}`;
 
       const html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -101,14 +67,24 @@ export const auth = betterAuth({
       }
     },
   },
-  session: {},
+
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
   },
+
   hooks: {},
+  callbacks: {
+    async signIn({}) {
+      return true;
+    },
+    async redirect() {
+      return "/";
+    },
+  },
+
   advanced: {
     trustHost: true, // ✅ REQUIRED
     trustProxy: true,
@@ -135,7 +111,7 @@ export const auth = betterAuth({
   },
   plugins: [
     adminPlugin({
-      adminUserIds: ["BmiEQBumD31Kv4TWFipaoqMnmMGmRFsV"],
+      adminUserIds: [""],
       ac,
       adminRoles: ["admin", "user", "doctor"],
       roles: { admin, user, doctor },
